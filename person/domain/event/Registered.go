@@ -1,4 +1,4 @@
-package domain
+package event
 
 import "workshop.es/person/domain/value"
 

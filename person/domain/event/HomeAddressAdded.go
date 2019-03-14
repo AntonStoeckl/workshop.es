@@ -1,8 +1,8 @@
-package domain
+package event
 
 import "workshop.es/person/domain/value"
 
-type HomeAddressChanged struct {
+type HomeAddressAdded struct {
 	ID          string
 	CountryCode string
 	PostalCode  string
@@ -11,8 +11,8 @@ type HomeAddressChanged struct {
 	HouseNumber string
 }
 
-func HomeAddressWasChanged(id *value.ID, homeAddress *value.Address) *domainEvent {
-	payload := &HomeAddressChanged{
+func HomeAddressWasAdded(id *value.ID, homeAddress *value.Address) *domainEvent {
+	payload := &HomeAddressAdded{
 		ID:          id.String(),
 		CountryCode: homeAddress.CountryCode(),
 		PostalCode:  homeAddress.PostalCode(),
