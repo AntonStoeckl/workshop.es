@@ -5,6 +5,12 @@ import (
 	"workshop.es/person/domain/value"
 )
 
+type Person interface {
+	ConfirmEmailAddress()
+	ChangeHomeAddress(homeAddress *value.Address)
+	RecordedEvents() []event.DomainEvent
+}
+
 type person struct {
 	id             *value.ID
 	name           *value.Name
@@ -15,38 +21,7 @@ type person struct {
 
 type RecordedEvents []event.DomainEvent
 
-func Register(id *value.ID, name *value.Name, emailAddress *value.EmailAddress) RecordedEvents {
-	p := &person{}
-
-	p.recordThat(event.ItWasRegistered(id, name, emailAddress))
-
-	return p.recordedEvents
-}
-
-func ConfirmEmailAddress(history []event.DomainEvent) RecordedEvents {
-	p := reconstitute(history)
-
-	if !p.emailAddress.IsConfirmed() {
-		p.recordThat(event.EmailAddressWasConfirmed(p.id))
-	}
-
-	return p.recordedEvents
-}
-
-func ChangeHomeAddress(history []event.DomainEvent, homeAddress *value.Address) RecordedEvents {
-	p := reconstitute(history)
-
-	switch true {
-	case p.homeAddress == nil:
-		p.recordThat(event.HomeAddressWasAdded(p.id, homeAddress))
-	case !p.homeAddress.Equals(homeAddress):
-		p.recordThat(event.HomeAddressWasChanged(p.id, homeAddress))
-	}
-
-	return p.recordedEvents
-}
-
-func reconstitute(history []event.DomainEvent) *person {
+func Reconstitute(history []event.DomainEvent) *person {
 	p := &person{}
 
 	for _, domainEvent := range history {
@@ -54,6 +29,30 @@ func reconstitute(history []event.DomainEvent) *person {
 	}
 
 	return p
+}
+
+func Register(id *value.ID, name *value.Name, emailAddress *value.EmailAddress) *person {
+	p := &person{}
+
+	p.recordThat(event.ItWasRegistered(id, name, emailAddress))
+
+	return p
+}
+
+func (p *person) ConfirmEmailAddress() {
+	if !p.emailAddress.IsConfirmed() {
+		p.recordThat(event.EmailAddressWasConfirmed(p.id))
+	}
+}
+
+func (p *person) ChangeHomeAddress(homeAddress *value.Address) {
+	if p.homeAddress == nil {
+		p.recordThat(event.HomeAddressWasAdded(p.id, homeAddress))
+	}
+
+	if !p.homeAddress.Equals(homeAddress) {
+		p.recordThat(event.HomeAddressWasChanged(p.id, homeAddress))
+	}
 }
 
 func (p *person) recordThat(domainEvent event.DomainEvent) {
@@ -92,4 +91,8 @@ func (p *person) whenHomeAddressWasAdded(payload *event.HomeAddressAdded) {
 
 func (p *person) whenHomeAddressWasChanged(payload *event.HomeAddressChanged) {
 	p.homeAddress = value.NewAddressWithoutValidation(payload.CountryCode, payload.PostalCode, payload.City, payload.Street, payload.HouseNumber)
+}
+
+func (p *person) RecordedEvents() []event.DomainEvent {
+	return p.recordedEvents
 }

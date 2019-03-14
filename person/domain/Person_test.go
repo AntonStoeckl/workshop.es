@@ -31,13 +31,13 @@ func Test_PersonTestSuite(t *testing.T) {
 
 func (s *PersonTestSuite) Test_Person_Register() {
 	// when
-	recordedEvents := Register(s.id, s.name, s.emailAddress)
+	person := Register(s.id, s.name, s.emailAddress)
 
 	// then
-	s.Len(recordedEvents, 1, "it should record 1 DomainEvent")
-	s.IsType(new(event.Registered), recordedEvents[0].Payload(), "it should record PersonRegistered")
+	s.Len(person.RecordedEvents(), 1, "it should record 1 DomainEvent")
+	s.IsType(new(event.Registered), person.RecordedEvents()[0].Payload(), "it should record PersonRegistered")
 
-	eventPayload, ok := recordedEvents[0].Payload().(*event.Registered)
+	eventPayload, ok := person.RecordedEvents()[0].Payload().(*event.Registered)
 	s.Require().True(ok, "it should have a payload of type HomeAddressChanged")
 
 	s.Equal(eventPayload.ID, s.id.String(), "PersonRegistered should expose expected ID")
@@ -48,18 +48,20 @@ func (s *PersonTestSuite) Test_Person_Register() {
 
 func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasNotConfirmed() {
 	// given
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+		},
+	)
 
 	// when
-	recordedEvents := ConfirmEmailAddress(history)
+	person.ConfirmEmailAddress()
 
 	// then
-	s.Len(recordedEvents, 1, "it should record 1 DomainEvent")
-	s.IsType(new(event.EmailAddressConfirmed), recordedEvents[0].Payload(), "it should record PersonEmailAddressConfirmed")
+	s.Len(person.RecordedEvents(), 1, "it should record 1 DomainEvent")
+	s.IsType(new(event.EmailAddressConfirmed), person.RecordedEvents()[0].Payload(), "it should record PersonEmailAddressConfirmed")
 
-	eventPayload, ok := recordedEvents[0].Payload().(*event.EmailAddressConfirmed)
+	eventPayload, ok := person.RecordedEvents()[0].Payload().(*event.EmailAddressConfirmed)
 	s.Require().True(ok, "it should have a payload of type HomeAddressChanged")
 
 	s.Equal(eventPayload.ID, s.id.String(), "PersonEmailAddressConfirmed should expose expected ID")
@@ -67,32 +69,36 @@ func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasNotConfirmed(
 
 func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasAlreadyConfirmed() {
 	// given
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-		event.EmailAddressWasConfirmed(s.id),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+			event.EmailAddressWasConfirmed(s.id),
+		},
+	)
 
 	// when
-	recordedEvents := ConfirmEmailAddress(history)
+	person.ConfirmEmailAddress()
 
 	// then
-	s.Len(recordedEvents, 0, "it should NOT record DomainEvents")
+	s.Len(person.RecordedEvents(), 0, "it should NOT record DomainEvents")
 }
 
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasEmpty() {
 	// given
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+		},
+	)
 
 	// when
-	recordedEvents := ChangeHomeAddress(history, s.homeAddress)
+	person.ChangeHomeAddress(s.homeAddress)
 
 	// then
-	s.Len(recordedEvents, 1, "it should record 1 DomainEvent")
-	s.Equal("PersonHomeAddressAdded", recordedEvents[0].EventName(), "it should record PersonHomeAddressAdded")
+	s.Len(person.RecordedEvents(), 1, "it should record 1 DomainEvent")
+	s.Equal("PersonHomeAddressAdded", person.RecordedEvents()[0].EventName(), "it should record PersonHomeAddressAdded")
 
-	eventPayload, ok := recordedEvents[0].Payload().(*event.HomeAddressAdded)
+	eventPayload, ok := person.RecordedEvents()[0].Payload().(*event.HomeAddressAdded)
 	s.True(ok, "it should have a payload of type HomeAddressAdded")
 
 	s.Equal(eventPayload.ID, s.id.String(), "PersonHomeAddressAdded  should expose expected ID")
@@ -105,20 +111,22 @@ func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasEmpty() {
 
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasDifferent() {
 	// given
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-		event.HomeAddressWasAdded(s.id, s.homeAddress),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+			event.HomeAddressWasAdded(s.id, s.homeAddress),
+		},
+	)
 
 	// when
 	differentHomeAddress := value.NewAddressWithoutValidation("DE", "80803", "München", "Am Lehel", "18b")
-	recordedEvents := ChangeHomeAddress(history, differentHomeAddress)
+	person.ChangeHomeAddress(differentHomeAddress)
 
 	// then
-	s.Require().Len(recordedEvents, 1, "it should record 1 DomainEvent")
-	s.Require().Equal("PersonHomeAddressChanged", recordedEvents[0].EventName(), "it should record PersonHomeAddressChanged")
+	s.Require().Len(person.RecordedEvents(), 1, "it should record 1 DomainEvent")
+	s.Require().Equal("PersonHomeAddressChanged", person.RecordedEvents()[0].EventName(), "it should record PersonHomeAddressChanged")
 
-	eventPayload, ok := recordedEvents[0].Payload().(*event.HomeAddressChanged)
+	eventPayload, ok := person.RecordedEvents()[0].Payload().(*event.HomeAddressChanged)
 	s.Require().True(ok, "it should have a payload of type HomeAddressChanged")
 
 	s.Equal(eventPayload.ID, s.id.String(), "PersonHomeAddressChanged  should expose expected ID")
@@ -131,31 +139,35 @@ func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasDifferent() {
 
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasAddedEqual() {
 	// given
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-		event.HomeAddressWasAdded(s.id, s.homeAddress),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+			event.HomeAddressWasAdded(s.id, s.homeAddress),
+		},
+	)
 
 	// when
-	recordedEvents := ChangeHomeAddress(history, s.homeAddress)
+	person.ChangeHomeAddress(s.homeAddress)
 
 	// then
-	s.Require().Len(recordedEvents, 0, "it should NOT record DomainEvents")
+	s.Require().Len(person.RecordedEvents(), 0, "it should NOT record DomainEvents")
 }
 
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasChangedEqual() {
 	// given
 	differentHomeAddress := value.NewAddressWithoutValidation("DE", "80803", "München", "Am Lehel", "18b")
 
-	history := []event.DomainEvent{
-		event.ItWasRegistered(s.id, s.name, s.emailAddress),
-		event.HomeAddressWasAdded(s.id, s.homeAddress),
-		event.HomeAddressWasChanged(s.id, differentHomeAddress),
-	}
+	person := Reconstitute(
+		[]event.DomainEvent{
+			event.ItWasRegistered(s.id, s.name, s.emailAddress),
+			event.HomeAddressWasAdded(s.id, s.homeAddress),
+			event.HomeAddressWasChanged(s.id, differentHomeAddress),
+		},
+	)
 
 	// when
-	recordedEvents := ChangeHomeAddress(history, differentHomeAddress)
+	person.ChangeHomeAddress(differentHomeAddress)
 
 	// then
-	s.Require().Len(recordedEvents, 0, "it should NOT record DomainEvents")
+	s.Require().Len(person.RecordedEvents(), 0, "it should NOT record DomainEvents")
 }
