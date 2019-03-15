@@ -1,15 +1,18 @@
 package event
 
-import "workshop.es/person/domain/value"
+import (
+	"workshop.es/person/domain/value"
+	"workshop.es/shared"
+)
 
 type Registered struct {
-	ID           string
-	GivenName    string
-	FamilyName   string
-	EmailAddress string
+	ID           string `json:"id"`
+	GivenName    string `json:"givenName"`
+	FamilyName   string `json:"familyName"`
+	EmailAddress string `json:"emailAddress"`
 }
 
-func ItWasRegistered(id *value.ID, name *value.Name, emailAddress *value.EmailAddress) *domainEvent {
+func ItWasRegistered(id *value.ID, name *value.Name, emailAddress *value.EmailAddress) *shared.DomainEventData {
 	payload := &Registered{
 		ID:           id.String(),
 		GivenName:    name.GivenName(),
@@ -17,5 +20,5 @@ func ItWasRegistered(id *value.ID, name *value.Name, emailAddress *value.EmailAd
 		EmailAddress: emailAddress.String(),
 	}
 
-	return NewDomainEventFromPayload(payload)
+	return shared.NewDomainEventFromPayload(id, payload)
 }

@@ -3,12 +3,13 @@ package domain
 import (
 	"workshop.es/person/domain/event"
 	"workshop.es/person/domain/value"
+	"workshop.es/shared"
 )
 
 type Person interface {
 	ConfirmEmailAddress()
 	ChangeHomeAddress(homeAddress *value.Address)
-	RecordedEvents() []event.DomainEvent
+	RecordedEvents() []shared.DomainEvent
 }
 
 type person struct {
@@ -16,12 +17,12 @@ type person struct {
 	name           *value.Name
 	emailAddress   *value.EmailAddress
 	homeAddress    *value.Address
-	recordedEvents []event.DomainEvent
+	recordedEvents []shared.DomainEvent
 }
 
-type RecordedEvents []event.DomainEvent
+type RecordedEvents []shared.DomainEvent
 
-func Reconstitute(history []event.DomainEvent) *person {
+func Reconstitute(history []shared.DomainEvent) *person {
 	p := &person{}
 
 	for _, domainEvent := range history {
@@ -55,12 +56,12 @@ func (p *person) ChangeHomeAddress(homeAddress *value.Address) {
 	}
 }
 
-func (p *person) recordThat(domainEvent event.DomainEvent) {
+func (p *person) recordThat(domainEvent shared.DomainEvent) {
 	p.when(domainEvent)
 	p.recordedEvents = append(p.recordedEvents, domainEvent)
 }
 
-func (p *person) when(domainEvent event.DomainEvent) event.DomainEvent {
+func (p *person) when(domainEvent shared.DomainEvent) shared.DomainEvent {
 	switch domainEvent.EventName() {
 	case "PersonRegistered":
 		p.whenItWasRegistered(domainEvent.Payload().(*event.Registered))
@@ -93,6 +94,6 @@ func (p *person) whenHomeAddressWasChanged(payload *event.HomeAddressChanged) {
 	p.homeAddress = value.NewAddressWithoutValidation(payload.CountryCode, payload.PostalCode, payload.City, payload.Street, payload.HouseNumber)
 }
 
-func (p *person) RecordedEvents() []event.DomainEvent {
+func (p *person) RecordedEvents() []shared.DomainEvent {
 	return p.recordedEvents
 }

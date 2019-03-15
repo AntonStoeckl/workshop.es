@@ -1,15 +1,18 @@
 package event
 
-import "workshop.es/person/domain/value"
+import (
+	"workshop.es/person/domain/value"
+	"workshop.es/shared"
+)
 
 type EmailAddressConfirmed struct {
-	ID string
+	ID string `json:"id"`
 }
 
-func EmailAddressWasConfirmed(id *value.ID) *domainEvent {
+func EmailAddressWasConfirmed(id *value.ID) *shared.DomainEventData {
 	payload := &EmailAddressConfirmed{
 		ID: id.String(),
 	}
 
-	return NewDomainEventFromPayload(payload)
+	return shared.NewDomainEventFromPayload(id, payload)
 }

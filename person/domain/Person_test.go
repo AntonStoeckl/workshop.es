@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"workshop.es/person/domain/event"
 	"workshop.es/person/domain/value"
+	"workshop.es/shared"
 )
 
 type PersonTestSuite struct {
@@ -49,7 +50,7 @@ func (s *PersonTestSuite) Test_Person_Register() {
 func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasNotConfirmed() {
 	// given
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 		},
 	)
@@ -70,7 +71,7 @@ func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasNotConfirmed(
 func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasAlreadyConfirmed() {
 	// given
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 			event.EmailAddressWasConfirmed(s.id),
 		},
@@ -86,7 +87,7 @@ func (s *PersonTestSuite) Test_Person_ConfirmEmailAddress_WhenItWasAlreadyConfir
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasEmpty() {
 	// given
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 		},
 	)
@@ -112,7 +113,7 @@ func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasEmpty() {
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasDifferent() {
 	// given
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 			event.HomeAddressWasAdded(s.id, s.homeAddress),
 		},
@@ -140,7 +141,7 @@ func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasDifferent() {
 func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasAddedEqual() {
 	// given
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 			event.HomeAddressWasAdded(s.id, s.homeAddress),
 		},
@@ -158,7 +159,7 @@ func (s *PersonTestSuite) Test_Person_ChangeHomeAddress_WhenItWasChangedEqual() 
 	differentHomeAddress := value.NewAddressWithoutValidation("DE", "80803", "München", "Am Lehel", "18b")
 
 	person := Reconstitute(
-		[]event.DomainEvent{
+		[]shared.DomainEvent{
 			event.ItWasRegistered(s.id, s.name, s.emailAddress),
 			event.HomeAddressWasAdded(s.id, s.homeAddress),
 			event.HomeAddressWasChanged(s.id, differentHomeAddress),

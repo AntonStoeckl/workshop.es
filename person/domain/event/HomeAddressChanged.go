@@ -1,17 +1,20 @@
 package event
 
-import "workshop.es/person/domain/value"
+import (
+	"workshop.es/person/domain/value"
+	"workshop.es/shared"
+)
 
 type HomeAddressChanged struct {
-	ID          string
-	CountryCode string
-	PostalCode  string
-	City        string
-	Street      string
-	HouseNumber string
+	ID          string `json:"id"`
+	CountryCode string `json:"countryCode"`
+	PostalCode  string `json:"postalCode"`
+	City        string `json:"city"`
+	Street      string `json:"street"`
+	HouseNumber string `json:"houseNumber"`
 }
 
-func HomeAddressWasChanged(id *value.ID, homeAddress *value.Address) *domainEvent {
+func HomeAddressWasChanged(id *value.ID, homeAddress *value.Address) *shared.DomainEventData {
 	payload := &HomeAddressChanged{
 		ID:          id.String(),
 		CountryCode: homeAddress.CountryCode(),
@@ -21,5 +24,5 @@ func HomeAddressWasChanged(id *value.ID, homeAddress *value.Address) *domainEven
 		HouseNumber: homeAddress.HouseNumber(),
 	}
 
-	return NewDomainEventFromPayload(payload)
+	return shared.NewDomainEventFromPayload(id, payload)
 }
